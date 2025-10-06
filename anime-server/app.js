@@ -3,6 +3,8 @@ import express from "express";
 import morgan from "morgan";
 import path from "path";
 import { fileURLToPath } from "url";
+import 'dotenv/config';
+
 
 import torrentRouter from "./routes/torrent.js";
 
