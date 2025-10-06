@@ -1,0 +1,153 @@
+*{box-sizing:border-box}
+:root{
+  --bg:#0b0e14;
+  --panel:#121723;
+  --panel-2:#0f1420;
+  --text:#e2e8f0;
+  --muted:#94a3b8;
+  --brand:#7c9cff; /* bleu doux */
+  --accent:#06d6a0; /* vert menthe pour états ok */
+  --danger:#ef476f;
+  --ring: 0 0 0 2px rgba(124,156,255,.3);
+}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 600px at -10% -10%, #1b2132 0%, transparent 60%),
+    radial-gradient(1000px 500px at 110% -10%, #1a2540 0%, transparent 60%),
+    radial-gradient(900px 500px at 50% 120%, #102033 0%, transparent 60%),
+    var(--bg);
+}
+
+/* container */
+.container{width:95%;max-width:1200px;margin:auto;padding:24px}
+
+/* nav */
+nav{
+  background: linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid #1f2432;
+  border-radius:14px;
+  padding:10px 14px;
+  margin-bottom:24px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap
+}
+nav a{
+  color:var(--text);
+  text-decoration:none;
+  padding:8px 10px;
+  border-radius:10px;
+  opacity:.9
+}
+nav a:hover{background:#1c2333; opacity:1; outline:var(--ring)}
+
+/* titres */
+h1,h2,h3{margin:8px 0 14px}
+h1{font-size:clamp(22px,3vw,28px)}
+h2{font-size:clamp(18px,2.5vw,22px)}
+h3{font-size:clamp(16px,2vw,18px)}
+
+/* search */
+.search-bar{
+  margin: 16px 0 8px;
+  display:flex;gap:8px;
+  background: linear-gradient(180deg,var(--panel),#0f1522);
+  border:1px solid #1f2432;
+  padding:10px; border-radius:12px
+}
+.search-bar input{
+  flex:1; padding:12px 14px; font-size:1rem;
+  color:var(--text); background:#0f1522; border:1px solid #1e293b; border-radius:10px
+}
+.search-bar input:focus{outline:none; box-shadow:var(--ring); border-color:#334155}
+.search-bar button{
+  padding:12px 16px; font-size:1rem; cursor:pointer;
+  color:#0b0e14; background:var(--brand); border:none; border-radius:10px; font-weight:600
+}
+.search-bar button:hover{filter:brightness(1.05)}
+
+/* grille d'animes (cards) */
+.anime-list{
+  display:grid; gap:14px;
+  grid-template-columns: repeat(auto-fill, minmax(160px,1fr));
+  margin:16px 0 8px;
+}
+.anime-item{
+  background: linear-gradient(180deg,#0f1420,#0b111b);
+  border:1px solid #1c2435;
+  border-radius:14px; padding:10px;
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.anime-item:hover{
+  transform: translateY(-2px);
+  border-color:#26324a; box-shadow:0 10px 30px rgba(5,12,25,.35)
+}
+.anime-item img{
+  width:100%; aspect-ratio: 3 / 4; object-fit:cover;
+  border-radius:10px; display:block; background:#0a0f18
+}
+.anime-title{font-size:.98rem;margin:8px 0 4px; line-height:1.3}
+.anime-meta{font-size:.85rem;color:var(--muted)}
+
+/* section */
+.section{
+  margin-top:18px;
+  padding:12px 14px;
+  background: linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid #1f2432; border-radius:14px;
+}
+
+/* détails */
+.anime-details{margin:16px 0}
+.anime-details-header{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:12px}
+.anime-cover{width:210px;max-width:38vw;border-radius:12px;border:1px solid #1f2432}
+.anime-info h2{margin:0 0 8px}
+.anime-info-meta{color:var(--muted);margin-bottom:10px}
+.add-watchlist-btn{
+  background:var(--brand); color:#0e1220; border:none; border-radius:10px;
+  padding:10px 14px; font-size:.98rem; font-weight:700; cursor:pointer
+}
+.add-watchlist-btn:hover{filter:brightness(1.06)}
+.anime-synopsis{margin-top:10px; color:#c7d2fe}
+
+/* épisodes */
+.episodes-list{margin: 14px 0}
+.episode-buttons{display:flex;flex-wrap:wrap;gap:8px}
+.episode-btn{
+  padding:8px 10px;border:none;border-radius:10px;cursor:pointer;
+  background:#0f1522; color:var(--text); border:1px solid #1f2432
+}
+.episode-btn:hover{border-color:#2a3650}
+.episode-btn.active{background:var(--brand); color:#0e1220; border-color:transparent}
+
+/* torrents */
+.torrent-section{margin:14px 0}
+.torrent-results ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.torrent-item{
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  background: #0d1420;border:1px solid #1c2435;padding:10px;border-radius:12px
+}
+.torrent-name{flex:1;word-break:break-word}
+.torrent-meta{font-size:.9rem;color:var(--muted)}
+.torrent-play-btn{
+  padding:8px 10px;background:var(--accent);color:#03120d;border:none;border-radius:10px;cursor:pointer;font-weight:700
+}
+.torrent-play-btn:hover{filter:brightness(1.05)}
+
+/* player */
+.video-player{text-align:center;margin:14px 0}
+.video-player p{font-style:italic;color:var(--muted)}
+.video-player video{max-width:100%;border:1px solid #1f2432;border-radius:12px;background:#000}
+
+/* watchlist & history */
+.remove-btn{
+  background:var(--danger); color:white; border:none; border-radius:10px; padding:8px 10px; cursor:pointer; margin-top:6px; font-weight:700
+}
+.remove-btn:hover{filter:brightness(1.05)}
+.history-list{list-style:none;padding:0;margin:16px 0;display:flex;flex-direction:column;gap:10px}
+.history-item{display:flex;align-items:flex-start;gap:10px;background:#0d1420;border:1px solid #1c2435;padding:10px;border-radius:12px}
+.history-item img{width:56px;height:auto;border-radius:8px;border:1px solid #1f2432}
+.history-details p{margin:0}
+.history-date{font-size:.85rem;color:var(--muted)}
