@@ -1,26 +1,23 @@
 import React from "react";
-import { Routes, Route, Link } from "react-router-dom";
-import HomePage from "./pages/HomePage.jsx";
-import AnimePage from "./pages/AnimePage.jsx";
-import PlayerPage from "./pages/PlayerPage.jsx";
-import WatchlistPage from "./pages/WatchlistPage.jsx";
-import HistoryPage from "./pages/HistoryPage.jsx";
+import { Routes, Route } from "react-router-dom";
+
+// Imports des NOUVELLES pages
+import Home from "./pages/Home/Home";
+// import Anime from "./pages/Anime/Anime"; // À faire après
+// import Player from "./pages/Player/Player"; // À faire après
+import WatchlistPage from "./pages/WatchlistPage"; // Ancienne version pour l'instant
+import HistoryPage from "./pages/HistoryPage";     // Ancienne version pour l'instant
+
+import "./App.css"; // Styles globaux (reset, variables)
 
 export default function App() {
   return (
-    <div className="container">
-      <nav>
-        <Link to="/">Accueil</Link>{" "}
-        <Link to="/watchlist">Watchlist</Link>{" "}
-        <Link to="/history">Historique</Link>
-      </nav>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/anime/:id" element={<AnimePage />} />
-        <Route path="/player" element={<PlayerPage />} />
-        <Route path="/watchlist" element={<WatchlistPage />} />
-        <Route path="/history" element={<HistoryPage />} />
-      </Routes>
-    </div>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/watchlist" element={<WatchlistPage />} />
+      <Route path="/history" element={<HistoryPage />} />
+      {/* <Route path="/anime/:id" element={<Anime />} /> */}
+      {/* <Route path="/player" element={<Player />} /> */}
+    </Routes>
   );
 }

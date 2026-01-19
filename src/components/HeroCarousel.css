@@ -1,0 +1,181 @@
+/* Wrapper Global */
+.hero-wrapper {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  margin-bottom: 40px;
+}
+
+.hero-swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.hero-slide-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* --- 1. IMAGE DE FOND --- */
+.hero-backdrop {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-size: cover;
+  background-position: center top;
+  transition: transform 6s ease;
+}
+
+.swiper-slide-active .hero-backdrop {
+  transform: scale(1.1);
+}
+
+/* --- 2. DÉGRADÉS --- */
+.hero-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, #141414 0%, transparent 60%),
+              linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 30%);
+  pointer-events: none;
+}
+
+/* --- 3. CONTENEUR INFO --- */
+.hero-info-container {
+  position: absolute;
+  bottom: 5%; /* Collé plus près du bas */
+  left: 50%;
+  transform: translateX(-50%); /* Centrage parfait */
+  width: 94%; /* Prend presque toute la largeur (petits bords de 3%) */
+  z-index: 10;
+}
+
+/* --- 4. EFFET GLASS (Flexbox pour Texte + Image) --- */
+.hero-info-glass {
+  background: rgba(0, 0, 0, 0.35); /* Fond noir beaucoup plus transparent */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 30px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  color: white;
+  text-align: left;
+  
+  /* Flex layout pour mettre l'affiche à droite */
+  display: flex;
+  align-items: center; /* Centré verticalement */
+  gap: 40px; /* Plus d'espace entre texte et image */
+}
+
+/* Colonne Texte */
+.hero-text-content {
+  flex: 1; /* Prend toute la place restante */
+}
+
+/* Colonne Affiche */
+.hero-poster-wrapper {
+  flex-shrink: 0; /* Empêche l'image d'être écrasée */
+  width: 200px; /* Affiche un peu plus grande vu qu'on a de la place */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.hero-poster-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+/* Typographie */
+.hero-title {
+  font-size: 3rem; /* Titre plus gros */
+  margin: 0 0 15px 0;
+  line-height: 1.1;
+  font-weight: 800;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #e0e0e0;
+}
+
+.match-score { color: #46d369; font-weight: 800; font-size: 1.2rem; }
+.type-badge {
+  border: 1px solid rgba(255,255,255,0.4);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.hero-synopsis {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #d1d1d1;
+  margin-bottom: 25px;
+}
+
+/* Boutons */
+.hero-actions { display: flex; gap: 15px; }
+
+.btn {
+  padding: 12px 28px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-play { background-color: white; color: black; }
+.btn-play:hover { background-color: rgba(255, 255, 255, 0.8); transform: scale(1.05); }
+
+.btn-details { background-color: rgba(109, 109, 110, 0.7); color: white; }
+.btn-details:hover { background-color: rgba(109, 109, 110, 0.5); transform: scale(1.05); }
+
+/* Navigation & Pagination */
+.swiper-button-prev, .swiper-button-next {
+  color: white !important;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: rgba(0,0,0,0.3);
+  width: 50px !important;
+  height: 100% !important;
+  top: 0 !important;
+  margin-top: 0 !important;
+}
+.hero-wrapper:hover .swiper-button-prev, .hero-wrapper:hover .swiper-button-next { opacity: 1; }
+.swiper-button-prev::after, .swiper-button-next::after { font-size: 2rem !important; font-weight: bold; }
+.swiper-pagination-bullet { background: white !important; opacity: 0.5; }
+.swiper-pagination-bullet-active { opacity: 1; transform: scale(1.2); }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .hero-info-container { width: 95%; left: 50%; bottom: 10%; }
+  
+  /* Sur mobile/tablette, on cache l'affiche pour gagner de la place */
+  .hero-poster-wrapper { display: none; }
+  
+  .hero-title { font-size: 1.8rem; }
+  .hero-synopsis { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .swiper-button-prev, .swiper-button-next { display: none !important; }
+}

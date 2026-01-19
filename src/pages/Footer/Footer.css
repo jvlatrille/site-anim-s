@@ -1,0 +1,14 @@
+.netflix-footer {
+  margin-top: 50px;
+  padding: 30px 4%;
+  color: #757575;
+  font-size: 0.9rem;
+  text-align: center;
+}
+.footer-links {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  font-size: 0.8rem;
+}

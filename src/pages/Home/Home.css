@@ -1,0 +1,55 @@
+/* Styles spécifiques au contenu Home (Carrousel, Listes) */
+.home-container {
+  min-height: 100vh;
+}
+
+/* CARROUSEL */
+.hero-carousel {
+  position: relative;
+  width: 100%;
+  height: 85vh;
+  overflow: hidden;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+.hero-slide.active { opacity: 1; z-index: 1; }
+
+.hero-backdrop {
+  width: 100%; height: 100%;
+  background-size: cover; background-position: center;
+  transform: scale(1.05);
+}
+
+.hero-gradient {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 70% 50%, transparent 0%, var(--bg-color) 120%),
+              linear-gradient(to top, var(--bg-color) 0%, transparent 50%);
+}
+
+.hero-content {
+  position: absolute;
+  top: 35%; left: 4%; width: 40%;
+  z-index: 10;
+}
+
+.hero-content h1 { font-size: 3.5rem; line-height: 1.1; margin-bottom: 1rem; text-shadow: 2px 2px 4px #000; }
+.hero-meta { color: #ddd; font-weight: bold; margin-bottom: 1rem; }
+.match-score { color: #46d369; margin-right: 15px; }
+
+.hero-actions { display: flex; gap: 15px; }
+.btn { padding: 10px 25px; border-radius: 4px; font-weight: bold; text-decoration: none; cursor: pointer; border: none; }
+.btn-play { background: white; color: black; }
+.btn-play:hover { background: #ddd; }
+
+/* SECTIONS */
+.section-trends, .section-results {
+  padding: 20px 4%;
+  position: relative;
+  z-index: 20;
+  margin-top: -100px; /* Chevauchement style Netflix */
+}
