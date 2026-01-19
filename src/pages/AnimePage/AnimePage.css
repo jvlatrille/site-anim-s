@@ -1,0 +1,214 @@
+/* AnimePage.css */
+.anime-page {
+    min-height: 100vh;
+    padding-bottom: 2rem;
+    position: relative;
+    color: #fff;
+    background-color: #141414; /* Default dark */
+}
+
+/* HERO SECTION */
+.anime-hero {
+    position: relative;
+    width: 100%;
+    min-height: 60vh;
+    display: flex;
+    align-items: flex-end;
+    padding: 3rem 4%;
+    margin-bottom: 2rem;
+}
+
+.anime-hero-backdrop {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(8px) brightness(0.4);
+    z-index: 0;
+    mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+}
+
+.anime-hero-content {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    gap: 3rem;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.anime-hero-poster {
+    width: 280px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    flex-shrink: 0;
+}
+
+.anime-hero-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.anime-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    line-height: 1.1;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.anime-meta-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+    align-items: center;
+    font-size: 0.95rem;
+    color: #ccc;
+}
+
+.tag {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 4px 10px;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+.score {
+    color: #46d369;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.anime-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 12px 30px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background-color: #e50914;
+    color: white;
+}
+.btn-primary:hover { background-color: #f40612; }
+
+.btn-secondary {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    backdrop-filter: blur(4px);
+}
+.btn-secondary:hover { background-color: rgba(255, 255, 255, 0.3); }
+
+.synopsis {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #ddd;
+    max-width: 800px;
+}
+
+/* EPISODES & TORRENTS SECTIONS */
+.anime-section {
+    max-width: 1400px;
+    margin: 0 auto 3rem;
+    padding: 0 4%;
+}
+
+.anime-section h2 {
+    font-size: 1.5rem;
+    border-left: 4px solid #e50914;
+    padding-left: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.episodes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 10px;
+}
+
+.episode-btn {
+    background: #333;
+    color: #fff;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 10px 0;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.episode-btn:hover { background: #444; }
+.episode-btn.active {
+    background: #e50914;
+    font-weight: bold;
+    border-color: #e50914;
+}
+
+/* TORRENT LIST styles */
+.torrent-list {
+    background: #1f1f1f;
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+.subsection-title {
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.8rem;
+    color: #ddd;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+}
+.subsection-title:first-child { margin-top: 0; }
+
+.torrent-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #333;
+}
+.torrent-item:last-child { border-bottom: none; }
+
+.torrent-info { display: flex; flex-direction: column; gap: 4px; }
+.torrent-name { font-weight: 500; color: #fff; }
+.torrent-meta { font-size: 0.85rem; color: #aaa; }
+
+.play-torrent-btn {
+    background: transparent;
+    border: 1px solid #46d369;
+    color: #46d369;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.play-torrent-btn:hover {
+    background: #46d369;
+    color: black;
+}
+
+@media (max-width: 768px) {
+    .anime-hero { align-items: flex-start; padding-top: 80px; }
+    .anime-hero-content { flex-direction: column; gap: 1.5rem; align-items: center; text-align: center; }
+    .anime-hero-poster { width: 200px; }
+    .anime-hero-info { align-items: center; }
+    .anime-meta-tags { justify-content: center; }
+}

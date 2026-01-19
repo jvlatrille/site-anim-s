@@ -1,0 +1,17 @@
+.home-section {
+    margin-bottom: 2rem;
+    padding: 0 4%;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #fff;
+    font-weight: 600;
+    border-left: 4px solid #e50914; /* Accent color like Netflix/Generic Streaming */
+    padding-left: 10px;
+}
+
+.section-content {
+    position: relative;
+}

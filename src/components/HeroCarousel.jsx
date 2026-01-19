@@ -39,7 +39,7 @@ export default function HeroCarousel({ animes }) {
                         anime.images?.webp?.large_image_url;
 
                     // 2. Affiche : Le poster vertical officiel
-                    const posterImage = anime.images?.webp?.large_image_url;
+                    const posterImage = anime.images?.webp?.image_url;
 
                     return (
                         <SwiperSlide key={anime.mal_id}>

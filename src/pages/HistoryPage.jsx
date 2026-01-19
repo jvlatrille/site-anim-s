@@ -1,28 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import History from '../components/History';
+import AnimeList from '../components/AnimeList';
+import Header from './Header/Header';
+import Footer from './Footer/Footer';
+import { StorageService } from '../services/storage';
 
 function HistoryPage() {
   const [historyItems, setHistoryItems] = useState([]);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('history');
-      if (stored) {
-        setHistoryItems(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error("Erreur lors de la récupération de l'historique", e);
-    }
+    setHistoryItems(StorageService.getHistory());
   }, []);
 
   return (
-    <div>
-      <h2>Historique</h2>
-      {historyItems.length === 0 ? (
-        <p>Aucun historique pour le moment.</p>
-      ) : (
-        <History historyItems={historyItems} />
-      )}
+    <div className="page-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Header />
+      <main style={{ flex: 1, padding: '20px 4%' }}>
+        <h2 style={{ color: 'white', marginBottom: '20px' }}>Historique</h2>
+        {historyItems.length === 0 ? (
+          <p style={{ color: '#aaa' }}>Aucun historique pour le moment.</p>
+        ) : (
+          <AnimeList
+            animeList={historyItems}
+            direction="grid"
+            showProgress={true}
+          />
+        )}
+      </main>
+      <Footer />
     </div>
   );
 }

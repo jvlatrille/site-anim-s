@@ -1,40 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import Watchlist from '../components/Watchlist';
+import React, { useEffect, useState, useCallback } from 'react';
+import AnimeList from '../components/AnimeList';
+import Header from './Header/Header';
+import Footer from './Footer/Footer';
+import { StorageService } from '../services/storage';
 
 function WatchlistPage() {
   const [watchlist, setWatchlist] = useState([]);
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('watchlist');
-      if (stored) {
-        setWatchlist(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error("Erreur lors de la récupération de la watchlist", e);
-    }
+  const loadWatchlist = useCallback(() => {
+    setWatchlist(StorageService.getWatchlist());
   }, []);
 
-  const handleRemove = (animeId) => {
-    try {
-      const stored = localStorage.getItem('watchlist');
-      let list = stored ? JSON.parse(stored) : [];
-      list = list.filter(item => item.mal_id !== animeId);
-      localStorage.setItem('watchlist', JSON.stringify(list));
-      setWatchlist(list);
-    } catch (e) {
-      console.error("Erreur lors de la mise à jour de la watchlist", e);
-    }
-  };
+  useEffect(() => {
+    loadWatchlist();
+  }, [loadWatchlist]);
 
   return (
-    <div>
-      <h2>Ma Watchlist</h2>
-      {watchlist.length === 0 ? (
-        <p>Aucun anime dans la watchlist.</p>
-      ) : (
-        <Watchlist items={watchlist} onRemove={handleRemove} />
-      )}
+    <div className="page-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Header />
+      <main style={{ flex: 1, padding: '20px 4%' }}>
+        <h2 style={{ color: 'white', marginBottom: '20px' }}>Ma Watchlist</h2>
+        {watchlist.length === 0 ? (
+          <p style={{ color: '#aaa' }}>Aucun anime dans la watchlist.</p>
+        ) : (
+          <AnimeList
+            animeList={watchlist}
+            direction="grid"
+            refreshWatchlist={loadWatchlist} // Pass callback to refresh UI on remove
+          />
+        )}
+      </main>
+      <Footer />
     </div>
   );
 }

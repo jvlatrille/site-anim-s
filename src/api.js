@@ -40,6 +40,7 @@ export async function getRecentAnimes() {
     Page(page: 1, perPage: 20) {
       airingSchedules(notYetAired: false, sort: TIME_DESC) {
         episode
+        airingAt
         media {
           id
           idMal
@@ -91,8 +92,8 @@ export async function getRecentAnimes() {
         score: anime.averageScore ? (anime.averageScore / 10).toFixed(1) : "?",
         type: anime.format,
         episodes: anime.episodes,
-        // On ajoute une info "Dernier épisode" pour l'affichage si besoin
-        latestEpisode: item.episode 
+        latestEpisode: item.episode,
+        airingAt: item.airingAt // Ajout du timestamp
       };
     });
 
@@ -146,7 +147,7 @@ export async function getSeasonTopAnime() {
       title: anime.title.english || anime.title.romaji,
       bannerImage: anime.bannerImage, 
       images: {
-        webp: { large_image_url: anime.coverImage.extraLarge || anime.coverImage.large }
+        webp: { image_url: anime.coverImage.extraLarge || anime.coverImage.large }
       },
       score: anime.averageScore ? (anime.averageScore / 10).toFixed(1) : "N/A", 
       year: anime.seasonYear,

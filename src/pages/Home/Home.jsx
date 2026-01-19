@@ -1,37 +1,43 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
 import HeroCarousel from "../../components/HeroCarousel";
 import AnimeList from "../../components/AnimeList";
-import { searchAnime, getSeasonTopAnime, getRecentAnimes } from "../../api"; // <--- getRecentAnimes importé
+import Section from "../../components/Section/Section";
+import { searchAnime, getSeasonTopAnime, getRecentAnimes } from "../../api";
+import { StorageService } from "../../services/storage";
 import './Home.css';
 
 export default function Home() {
     const [results, setResults] = useState([]);
-    const [recentList, setRecentList] = useState([]); // Renommé pour plus de clarté
+
+    // Data states
     const [featuredList, setFeaturedList] = useState([]);
+    const [recentList, setRecentList] = useState([]);
+
+    // User lists (LocalStorage)
+    const [history, setHistory] = useState([]);
+    const [watchlist, setWatchlist] = useState([]);
 
     const [loadingRecent, setLoadingRecent] = useState(true);
     const [loadingSearch, setLoadingSearch] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [err, setErr] = useState("");
 
-    // Chargement des données
+    // Charge les données de l'API (une seule fois)
     useEffect(() => {
         let alive = true;
         (async () => {
             try {
                 setLoadingRecent(true);
-
-                // 1. Carrousel : Top de la saison (AniList)
-                const seasonData = await getSeasonTopAnime();
-
-                // 2. Liste du bas : Sorties Récentes (AniList Schedule)
-                const recentData = await getRecentAnimes();
+                const [seasonData, recentData] = await Promise.all([
+                    getSeasonTopAnime(),
+                    getRecentAnimes()
+                ]);
 
                 if (alive) {
-                    if (seasonData.length > 0) setFeaturedList(seasonData);
-                    if (recentData.length > 0) setRecentList(recentData);
+                    setFeaturedList(seasonData);
+                    setRecentList(recentData);
                 }
             } catch (e) {
                 console.error(e);
@@ -41,6 +47,19 @@ export default function Home() {
         })();
         return () => { alive = false; };
     }, []);
+
+    // Charge les données locales (Watchlist/History)
+    const loadUserData = useCallback(() => {
+        setHistory(StorageService.getContinueWatching());
+        setWatchlist(StorageService.getWatchlist());
+    }, []);
+
+    useEffect(() => {
+        loadUserData();
+        // Optionnel: écouter les changements de focus pour rafraîchir si l'utilisateur revient d'un épisode
+        window.addEventListener('focus', loadUserData);
+        return () => window.removeEventListener('focus', loadUserData);
+    }, [loadUserData]);
 
     const handleSearch = async (q) => {
         setLoadingSearch(true);
@@ -69,18 +88,45 @@ export default function Home() {
                     </div>
                 ) : (
                     <>
-                        {/* Carrousel : Tendances Saison */}
+                        {/* Carrousel Principal */}
                         <HeroCarousel animes={featuredList} />
 
-                        {/* Liste du bas : Derniers épisodes sortis */}
-                        <div className="section-trends">
-                            <h3>Dernières Sorties d'Épisodes</h3>
+                        {/* 1. Reprendre la lecture (Historique) */}
+                        {history.length > 0 && (
+                            <Section title="Reprendre la lecture">
+                                <AnimeList
+                                    animeList={history.slice(0, 10)}
+                                    direction="row"
+                                    showProgress={true}
+                                />
+                            </Section>
+                        )}
+
+                        {/* 2. Ma Liste (Watchlist) */}
+                        {watchlist.length > 0 && (
+                            <Section title="Ma Liste">
+                                <AnimeList
+                                    animeList={watchlist}
+                                    direction="row"
+                                    // On passe une fonction pour rafraîchir si on retire un élément
+                                    key={watchlist.length} // Force re-render simple
+                                />
+                            </Section>
+                        )}
+
+                        {/* 3. Dernières Sorties */}
+                        <Section title="Dernières Sorties d'Épisodes">
                             {loadingRecent ? (
-                                <div className="loader">Chargement des sorties...</div>
+                                <div className="loader">Chargement...</div>
                             ) : (
-                                <AnimeList animeList={recentList} />
+                                <AnimeList animeList={recentList} direction="row" />
                             )}
-                        </div>
+                        </Section>
+
+                        {/* 4. Tendances de la saison (reste de la liste featured) */}
+                        <Section title="Tendances de la Saison">
+                            <AnimeList animeList={featuredList} direction="grid" />
+                        </Section>
                     </>
                 )}
             </main>

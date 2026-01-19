@@ -10,6 +10,7 @@ import { selectVideoFile } from "../utils/selectVideoFile.js";
 import { ffmpeg } from "../utils/videoPaths.js";
 import { getVideoAbsolutePath } from "../utils/videoPaths.js";
 import { Writable } from "stream";
+import { translate } from 'google-translate-api-x';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -456,7 +457,10 @@ function isNonVideo(name) {
 
 function hasFrenchHint(name) {
   const n = name.toLowerCase();
-  return /\b(vostfr|multi-?subs?.*fr|multi.*(fr|french)|french|fre|fra|vf)\b/.test(n);
+  // "VOSTFR" (or variants) OR "MULTI" (which usually implies VOSTFR is included)
+  // We exclude pure "VF" or "FRENCH" because the user specifically asked for "VOSTFR" (or VO w/ subs).
+  // "MULTI" is safe-ish because it contains both.
+  return /\b(vostfr|vostf|sub\s*fr|multi)\b/i.test(n);
 }
 function hasSubsHint(name) {
   const n = name.toLowerCase();
@@ -496,6 +500,9 @@ function scoreTorrent(t, episode) {
 
   // rejet dur
   if (isNonVideo(name)) return { reject:true, reason:'non-video' };
+
+  // rejet si pas VOSTFR/MULTI (Demande utilisateur: "seulement VOSTFR")
+  if (!hasFrenchHint(name)) return { reject:true, reason:'not-vostfr' };
 
   const batch = isBatchName(name);
   const epMatch = matchesEpisode(name, episode);
@@ -735,12 +742,13 @@ router.get("/subtitles/:infoHash", async (req, res) => {
     });
 
     // pistes intégrées → ne garde que les codecs texte
+    console.log("DEBUG: Probe streams:", probe.streams?.length);
     const embedded = (probe.streams || [])
-      .filter(
-        (s) =>
-          s.codec_type === "subtitle" &&
-          TEXT_SUB_CODECS.has((s.codec_name || "").toLowerCase())
-      )
+      .filter((s) => {
+          const isSub = s.codec_type === "subtitle";
+          if (isSub) console.log(`DEBUG: Found subtitle stream: ${s.codec_name} (Text-based: ${TEXT_SUB_CODECS.has((s.codec_name || "").toLowerCase())})`);
+          return isSub && TEXT_SUB_CODECS.has((s.codec_name || "").toLowerCase());
+      })
       .map((s, idx) => {
         const { lang, label } = pickLangLabel(s.tags || {});
         return {
@@ -778,13 +786,28 @@ router.get("/subtitles/:infoHash", async (req, res) => {
       });
 
     // tri: FR d'abord
-    const tracks = [...embedded, ...externals].sort((a, b) => {
+    const sorted = [...embedded, ...externals].sort((a, b) => {
       if (a.lang === "fr" && b.lang !== "fr") return -1;
       if (b.lang === "fr" && a.lang !== "fr") return 1;
       return 0;
     });
 
-    res.json({ tracks });
+    // Si pas de FR, on ajoute une option "Français (Auto)" basée sur la 1ère piste (souvent Anglais)
+    const hasFr = sorted.some(t => t.lang === 'fr');
+    if (!hasFr && sorted.length > 0) {
+      const bestSource = sorted[0]; // On prend la première (souvent EN)
+      sorted.unshift({
+        id: `${bestSource.id}-auto`,
+        type: bestSource.type,
+        lang: 'fr',
+        label: `Français (Auto from ${bestSource.lang})`,
+        codec: 'webvtt', // sera converti
+        src: `${bestSource.src}?translate=fr`, // On ajoute le paramètre translate
+        originalId: bestSource.id
+      });
+    }
+
+    res.json({ tracks: sorted });
   } catch (e) {
     console.error("ERR /api/subtitles list", e);
     res.status(500).json({ tracks: [] });
@@ -798,61 +821,181 @@ router.get("/subtitles/:infoHash/:trackId.vtt", async (req, res) => {
     if (!torrent) return res.status(404).send("Not found");
 
     const cachePath = path.join(SUB_CACHE_DIR, `${infoHash}-${trackId}.vtt`);
-    if (fs.existsSync(cachePath)) {
-      res.setHeader("Content-Type", "text/vtt; charset=utf-8");
-      return fs.createReadStream(cachePath).pipe(res);
+    // --- Logique de récupération du VTT (soit depuis cache, soit généré) ---
+    // Si traduction demandée, on ne peut pas pipe direct, il faut intercepter
+    const needsTranslation = req.query.translate === 'fr';
+    
+    // Fonction helper pour générer le VTT (sans l'envoyer dans res tout de suite)
+    const generateVttStream = async () => {
+       // Cache existant (SANS traduction) ?
+       // Si traduction, on ne peut pas utiliser le cache "brut" du disque sauf si on a aussi un cache traduit (non implémenté ici pour simplicité)
+       // Pour l'instant on régénère/lit et on traduit à la volée.
+       
+       if (!needsTranslation && fs.existsSync(cachePath)) {
+         return fs.createReadStream(cachePath);
+       }
+
+       // Si on doit générer via ffmpeg
+       if (trackId.startsWith("s-")) {
+          const sIdx = parseInt(trackId.split("-")[1], 10);
+          const file = selectVideoFile(torrent);
+          if (!file) throw new Error("No video");
+          
+          const root = torrent.path || DOWNLOADS_DIR;
+          const videoFileAbs = path.isAbsolute(file.path) ? file.path : path.join(root, file.path);
+          
+          await prefetchHeader(file);
+          
+          // Si on traduit, on n'écrit PAS directement dans cachePath (sinon on écrase la VO)
+          // Ou alors on utilise un cachePath spécifique pour la trad ? 
+          // Allez, on fait simple : on génère en mémoire ou tmp
+          
+          const passThrough = new Writable({
+            write(chunk, encoding, callback) { callback(); } // Dummy
+          });
+          
+          // On utilise ffmpeg pour sortir le VTT
+          // Si traduction: on le récupère en buffer
+          // Si pas traduction: on le sauve dans cachePath puis on readStream
+          
+          if (!needsTranslation) {
+             await new Promise((resolve, reject) => {
+                ffmpeg(videoFileAbs)
+                  .outputOptions([`-map 0:s:${sIdx}`, "-f webvtt", "-loglevel error"])
+                  .save(cachePath)
+                  .on("end", resolve)
+                  .on("error", reject);
+             });
+             return fs.createReadStream(cachePath);
+          } else {
+             // Pour traduction: on veut le flux. 
+             // FFmpeg save() écrit dans un fichier. pipe() écrit dans un stream.
+             // On va pipe dans un PassThrough
+             const { PassThrough } = await import('stream');
+             const stream = new PassThrough();
+             
+             ffmpeg(videoFileAbs)
+                .outputOptions([`-map 0:s:${sIdx}`, "-f webvtt", "-loglevel error"])
+                .format('webvtt')
+                .pipe(stream);
+                
+             return stream;
+          }
+       }
+       
+       if (trackId.startsWith("f-")) {
+          const fIdx = parseInt(trackId.split("-")[1], 10);
+          const subFile = (torrent.files || []).filter((f) => /\.(srt|ass|ssa)$/i.test(f.name))[fIdx];
+          if (!subFile) throw new Error("No sub file");
+
+          const root = torrent.path || DOWNLOADS_DIR;
+          const abs = path.isAbsolute(subFile.path) ? subFile.path : path.join(root, subFile.path);
+
+          if (!needsTranslation) {
+             await new Promise((resolve, reject) => {
+                ffmpeg(abs)
+                  .outputOptions(["-f webvtt", "-loglevel error"])
+                  .save(cachePath)
+                  .on("end", resolve)
+                  .on("error", reject);
+             });
+             return fs.createReadStream(cachePath);
+          } else {
+             const { PassThrough } = await import('stream');
+             const stream = new PassThrough();
+             ffmpeg(abs)
+                .outputOptions(["-f webvtt", "-loglevel error"])
+                .format('webvtt') // output format
+                .pipe(stream);
+             return stream;
+          }
+       }
+       throw new Error("Invalid track id");
+    };
+
+    const vttStream = await generateVttStream();
+    res.setHeader("Content-Type", "text/vtt; charset=utf-8");
+
+    if (!needsTranslation) {
+      return vttStream.pipe(res);
     }
 
-    if (trackId.startsWith("s-")) {
-      const sIdx = parseInt(trackId.split("-")[1], 10);
-      const file = selectVideoFile(torrent);
-      if (!file) return res.status(404).send("No video");
+    // --- LOGIQUE DE TRADUCTION BATCH ---
+    // On lit tout le stream VTT en mémoire
+    const chunks = [];
+    for await (const chunk of vttStream) {
+      chunks.push(chunk);
+    }
+    const content = Buffer.concat(chunks).toString('utf-8');
+    
+    // Parsing plus robuste
+    const lines = content.replace(/\r\n/g, '\n').split('\n');
+    let outputLines = [];
+    let textLinesToTranslate = [];
+    let lineIndicesToTranslate = []; // mappage: index dans outputLines -> index dans textLinesToTranslate
 
-      await prefetchHeader(file);
+    const timeRe = /-->/; // Simple check for cue line
 
-      const root = torrent.path || DOWNLOADS_DIR;
-      const videoFileAbs = path.isAbsolute(file.path)
-        ? file.path
-        : path.join(root, file.path);
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.trim() === 'WEBVTT' || line.startsWith('NOTE')) {
+            outputLines.push(line);
+            continue;
+        }
+        
+        // Si c'est un timestamp
+        if (timeRe.test(line)) {
+            outputLines.push(line);
+            continue;
+        }
 
-      // on tente la conversion → si codec non-texte, ffmpeg va râler : on renvoie 415
-      await new Promise((resolve, reject) => {
-        ffmpeg(videoFileAbs)
-          .outputOptions([`-map 0:s:${sIdx}`, "-f webvtt", "-loglevel error"])
-          .save(cachePath)
-          .on("end", resolve)
-          .on("error", reject);
-      }).catch(() => {
-        throw Object.assign(new Error("Unsupported sub stream"), { code: 415 });
-      });
+        // Si c'est un index numérique juste avant un timestamp (parfois présent)
+        // ex: "1\n00:00:00 --> ..."
+        if (/^\d+$/.test(line.trim()) && (i+1 < lines.length && timeRe.test(lines[i+1]))) {
+            outputLines.push(line);
+            continue;
+        }
+        
+        // Si ligne vide
+        if (!line.trim()) {
+            outputLines.push(line);
+            continue;
+        }
 
-      res.setHeader("Content-Type", "text/vtt; charset=utf-8");
-      return fs.createReadStream(cachePath).pipe(res);
+        // Sinon c'est du texte
+        outputLines.push(null); // Placeholdler
+        lineIndicesToTranslate.push(outputLines.length - 1);
+        textLinesToTranslate.push(line);
     }
 
-    if (trackId.startsWith("f-")) {
-      const fIdx = parseInt(trackId.split("-")[1], 10);
-      const subFile = (torrent.files || []).filter((f) =>
-        /\.(srt|ass|ssa)$/i.test(f.name)
-      )[fIdx];
-      if (!subFile) return res.status(404).send("No sub file");
-
-      const root = torrent.path || DOWNLOADS_DIR;
-      const abs = path.isAbsolute(subFile.path)
-        ? subFile.path
-        : path.join(root, subFile.path);
-
-      await new Promise((resolve, reject) => {
-        ffmpeg(abs)
-          .outputOptions(["-f webvtt", "-loglevel error"])
-          .save(cachePath)
-          .on("end", resolve)
-          .on("error", reject);
-      });
-
-      res.setHeader("Content-Type", "text/vtt; charset=utf-8");
-      return fs.createReadStream(cachePath).pipe(res);
+    if (textLinesToTranslate.length > 0) {
+        console.log(`DEBUG: Translating ${textLinesToTranslate.length} lines...`);
+        try {
+            // Google Translate API x supports array
+            const results = await translate(textLinesToTranslate, { to: 'fr' });
+            
+            // results peut être un array ou un seul objet si 1 ligne
+            const translations = Array.isArray(results) ? results : [results];
+            
+            for (let k = 0; k < translations.length; k++) {
+                const originalIdx = lineIndicesToTranslate[k];
+                outputLines[originalIdx] = translations[k].text;
+            }
+        } catch (e) {
+            console.error("DEBUG: Batch translation failed", e);
+            // Fallback: restore original text
+            for (let k = 0; k < textLinesToTranslate.length; k++) {
+                 const originalIdx = lineIndicesToTranslate[k];
+                 outputLines[originalIdx] = textLinesToTranslate[k];
+            }
+        }
     }
+
+    const finalOutput = outputLines.join('\n');
+    console.log("DEBUG: Serving translated VTT, length:", finalOutput.length);
+    res.send(finalOutput);
+    return;
+
 
     return res.status(400).send("Invalid track id");
   } catch (e) {
